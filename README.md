@@ -203,59 +203,6 @@ python epidemic_simulator.py --model SIR --save meu_grafico.png
 
 ---
 
-## Como Hospedar no GitHub Pages
-
-O GitHub Pages permite publicar a interface web gratuitamente, diretamente do seu repositório.
-
-### Passo a passo
-
-**1. Criar o repositório no GitHub**
-
-- Acesse [github.com](https://github.com) e faça login
-- Clique em **"New repository"**
-- Nomeie como `simulador-epidemiologico` (ou o nome que preferir)
-- Deixe como **público**
-- Clique em **"Create repository"**
-
-**2. Enviar os arquivos**
-
-```bash
-# Na pasta do projeto, inicializar o Git
-git init
-
-# Adicionar todos os arquivos
-git add .
-
-# Fazer o primeiro commit
-git commit -m "Projeto inicial: simulador epidemiológico SIR/SEIR"
-
-# Conectar ao repositório remoto (substitua SEU_USUARIO)
-git remote add origin https://github.com/SEU_USUARIO/simulador-epidemiologico.git
-
-# Enviar para o GitHub
-git push -u origin main
-```
-
-**3. Ativar o GitHub Pages**
-
-- No repositório, clique na aba **"Settings"** (Configurações)
-- No menu lateral, clique em **"Pages"**
-- Em **"Source"**, selecione a branch **`main`** e a pasta **`/ (root)`**
-- Clique em **"Save"**
-- Aguarde 1–2 minutos
-
-**4. Acessar o site**
-
-Após a ativação, seu simulador estará disponível em:
-
-```
-https://SEU_USUARIO.github.io/simulador-epidemiologico/
-```
-
-> **Dica:** O arquivo principal deve se chamar `index.html` para que o GitHub Pages o reconheça automaticamente como página inicial.
-
----
-
 ## Limitações do Modelo
 
 Os modelos SIR e SEIR são simplificações matemáticas da realidade. É importante compreender suas limitações:
