@@ -1,0 +1,119 @@
+Simulação Computacional de Doenças Infecciosas: Modelos SIR e SEIR
+
+Simulação Computacional da Propagação de Doenças Infecciosas: Uma Abordagem com os Modelos SIR e SEIR
+
+Artigo Científico — Modelagem Epidemiológica Computacional
+
+Resumo
+
+Este artigo apresenta e descreve um simulador computacional de doenças infecciosas baseado nos modelos epidemiológicos SIR (Suscetíveis–Infectados–Recuperados) e SEIR (Suscetíveis–Expostos–Infectados–Recuperados). São descritas as equações diferenciais ordinárias que governam cada modelo, os parâmetros epidemiológicos fundamentais — taxa de transmissão (β), taxa de recuperação (γ) e, no caso do SEIR, a taxa de incubação (σ) — e a implementação computacional realizada em Python com integração numérica via scipy.integrate.odeint. São discutidos os resultados gráficos produzidos, incluindo as curvas epidêmicas, a incidência diária e o número básico de reprodução (R₀). O simulador foi projetado como ferramenta pedagógica e investigativa, permitindo comparação de múltiplos cenários e exploração do impacto de intervenções não farmacológicas sobre a dinâmica de transmissão.
+
+Palavras-chave: epidemiologia computacional; modelo SIR; modelo SEIR; equações diferenciais; R₀; simulação de doenças infecciosas.
+
+1. Introdução
+
+A modelagem matemática de doenças infecciosas é uma das ferramentas mais poderosas disponíveis à epidemiologia moderna. Desde os trabalhos pioneiros de Kermack e McKendrick (1927), modelos baseados em compartimentos populacionais têm sido amplamente empregados para compreender a dinâmica de transmissão de patógenos, avaliar estratégias de controle e subsidiar políticas de saúde pública. A relevância desses modelos foi amplamente evidenciada durante a pandemia de COVID-19, quando projeções epidemiológicas baseadas em SIR e SEIR orientaram decisões governamentais em todo o mundo.
+
+O princípio fundamental desses modelos reside na partição da população total em subgrupos — chamados compartimentos — que representam diferentes estados de infecção. Indivíduos transitam entre compartimentos de acordo com taxas parametrizadas que capturam o comportamento biológico e social da transmissão. A dinâmica resultante é descrita por um sistema de equações diferenciais ordinárias (EDOs), cuja solução ao longo do tempo revela o perfil da epidemia.
+
+O presente artigo descreve um simulador computacional implementado em Python que integra numericamente esses sistemas de EDOs e produz visualizações interpretáveis das curvas epidêmicas. O objetivo é duplo: (i) documentar o referencial matemático que fundamenta o simulador, e (ii) demonstrar como os parâmetros epidemiológicos influenciam qualitativamente e quantitativamente o curso de uma epidemia. O simulador é voltado tanto a estudantes de graduação quanto a pesquisadores interessados em exploração rápida de cenários.
+
+2. Metodologia
+
+A metodologia adotada segue o paradigma da modelagem baseada em compartimentos, em que a população total N é assumida constante e fechada — sem nascimentos, mortes ou migrações ao longo do período simulado. Esta hipótese é razoável para epidemias de curta duração em populações grandes.
+
+As equações diferenciais que descrevem a evolução temporal de cada compartimento são integradas numericamente utilizando o método LSODA, disponível por meio da função odeint da biblioteca scipy (Virtanen et al., 2020). A discretização temporal é feita em 10 pontos por dia, garantindo suavidade nas curvas sem perda de precisão. Os parâmetros de entrada do modelo são: tamanho da população (N), taxa de transmissão (β), taxa de recuperação (γ), taxa de progressão da latência para infectividade (σ, exclusiva do SEIR), número inicial de infectados (I₀) e duração da simulação em dias.
+
+A partir dos resultados numéricos, são computadas métricas epidemiológicas derivadas: o número básico de reprodução R₀, o pico de infectados e o dia em que ocorre, a taxa de ataque final (proporção da população que foi infectada ao longo da epidemia) e o limiar de imunidade coletiva.
+
+3. Descrição dos Modelos
+
+3.1 Modelo SIR
+
+O modelo SIR divide a população em três compartimentos: Suscetíveis (S), Infectados (I) e Recuperados (R), com S + I + R = N. A dinâmica de transmissão é governada pelo seguinte sistema de EDOs:
+
+dS/dt  =  −β · S · I / N
+
+dI/dt  =   β · S · I / N  −  γ · I
+
+dR/dt  =   γ · I
+
+O parâmetro β (beta) representa a taxa de transmissão e equivale ao produto entre o número médio de contatos diários de um indivíduo e a probabilidade de transmissão por contato. O parâmetro γ (gamma) é a taxa de recuperação, cujo inverso 1/γ representa a duração média do período infeccioso em dias.
+
+A força de infecção — taxa per capita de infecção dos suscetíveis — é dada por λ = β · I/N, o que reflete o pressuposto de mistura homogênea: qualquer suscetível tem a mesma probabilidade de encontrar qualquer infectado.
+
+3.2 Número Básico de Reprodução (R₀)
+
+O número básico de reprodução R₀ é a métrica central da epidemiologia de transmissão. Ele representa o número médio de casos secundários gerados por um único infectado introduzido em uma população totalmente suscetível. No modelo SIR, sua expressão analítica é:
+
+R₀  =  β / γ
+
+Quando R₀ > 1, a epidemia se expande; quando R₀ < 1, ela se extingue naturalmente. O limiar de imunidade coletiva — fração mínima da população que deve ser imune para interromper a transmissão — é dado por 1 − 1/R₀. Por exemplo, se R₀ = 3, são necessários pelo menos 66,7% de imunes na população para conter a propagação.
+
+3.3 Modelo SEIR
+
+O modelo SEIR incorpora um quarto compartimento, os Expostos (E), que representa indivíduos que foram infectados mas ainda não são infecciosos — o chamado período de latência ou incubação. Este compartimento é especialmente relevante em doenças como COVID-19, sarampo e influenza, nas quais o intervalo entre a exposição e o início da infectividade é biologicamente significativo. O sistema de EDOs torna-se:
+
+dS/dt  =  −β · S · I / N
+
+dE/dt  =   β · S · I / N  −  σ · E
+
+dI/dt  =   σ · E           −  γ · I
+
+dR/dt  =   γ · I
+
+O parâmetro σ (sigma) é a taxa de progressão da exposição para a infectividade, e 1/σ representa o período médio de incubação em dias. O modelo SEIR produz curvas epidêmicas com pico mais tardio e mais suave em relação ao SIR com os mesmos valores de β e γ, pois a latência atrasa a entrada de novos infectados na população.
+
+4. Implementação Computacional
+
+O simulador foi implementado em Python 3.10+, utilizando as bibliotecas NumPy para operações numéricas, SciPy para integração das EDOs e Matplotlib para geração dos gráficos. O código foi estruturado de forma modular, separando as definições das EDOs, a lógica de integração, o cálculo de métricas derivadas e as rotinas de visualização.
+
+As equações diferenciais do SIR e do SEIR são definidas em funções separadas, sir_odes e seir_odes, que recebem o vetor de estado atual e os parâmetros, retornando as derivadas. A integração é realizada pela função odeint, que aplica automaticamente o método LSODA — um solver adaptativo que alterna entre métodos stiff e non-stiff conforme a rigidez local do sistema.
+
+Os parâmetros do modelo são encapsulados em uma classe de dados (EpidemicParams), e os resultados numéricos em uma classe SimulationResult, que também computa automaticamente as métricas epidemiológicas derivadas. Essa estrutura facilita a comparação de múltiplos cenários e a extensão do código para modelos mais complexos.
+
+Para a visualização, o simulador gera um painel com três gráficos: (i) a curva epidêmica principal, mostrando a evolução temporal de todos os compartimentos como percentual da população; (ii) um gráfico de barras com a incidência diária estimada de novos casos; e (iii) uma área empilhada que ilustra como a distribuição populacional entre compartimentos evolui ao longo do tempo. Quando múltiplos cenários são executados, uma função de comparação sobrepõe as curvas de infectados de todos os cenários em um único gráfico, acompanhada de uma tabela com as métricas principais.
+
+5. Resultados e Discussão
+
+5.1 Comportamento do modelo SIR
+
+Para uma população de N = 100.000 indivíduos com β = 0,30 e γ = 0,10, obtém-se R₀ = 3,0. A simulação revela uma curva epidêmica com pico de infectados da ordem de 30% da população por volta do dia 70, com taxa de ataque final superior a 94%. Este valor elevado de R₀ é comparável ao do sarampo pré-vacinal e ilustra como doenças altamente transmissíveis podem atingir a quase totalidade de uma população não imune.
+
+A sensibilidade do modelo ao parâmetro β é pronunciada. Reduzindo β de 0,30 para 0,15 — o que simula uma intervenção não farmacológica como distanciamento social — o R₀ cai para 1,5, e o pico de infectados reduz-se a menos de 10% da população, deslocando-se para além do dia 150. Este comportamento, conhecido como achatamento da curva epidêmica, demonstra quantitativamente o impacto de medidas de controle sobre a carga sobre o sistema de saúde.
+
+5.2 Diferenças entre SIR e SEIR
+
+A inclusão do compartimento E no modelo SEIR, com σ = 0,20 (período de incubação médio de 5 dias), produz um retardo na evolução da epidemia em relação ao SIR equivalente. O pico de infectados ocorre mais tarde e é ligeiramente mais baixo, enquanto a taxa de ataque final permanece similar. Este efeito é epidemiologicamente relevante: o período de latência fornece uma janela temporal para identificação e isolamento de contatos expostos antes que se tornem infecciosos, o que é o fundamento epidemiológico da rastreabilidade de contatos.
+
+5.3 Limitações dos modelos
+
+Os modelos SIR e SEIR operam sob premissas simplificadoras que devem ser consideradas na interpretação dos resultados. A hipótese de mistura homogênea ignora estruturas populacionais como redes sociais, heterogeneidade etária e distribuição espacial. A constância dos parâmetros β e γ ao longo do tempo não captura mudanças comportamentais, sazonalidade ou evolução do patógeno. Extensões como o modelo SEIRS (com perda de imunidade), modelos por faixa etária e abordagens estocásticas podem aumentar o realismo preditivo em contextos específicos.
+
+6. Conclusão
+
+O simulador apresentado constitui uma plataforma computacional acessível e cientificamente fundamentada para o estudo da dinâmica de doenças infecciosas. A implementação em Python com integração numérica de EDOs assegura precisão matemática, enquanto a estrutura modular facilita a adaptação a novos modelos e contextos.
+
+Os resultados demonstram que pequenas variações no parâmetro β — passíveis de interpretação como efeitos de medidas de controle — produzem transformações substantivas no perfil da epidemia, validando a utilidade do simulador como ferramenta de análise de políticas de saúde. A comparação entre SIR e SEIR evidencia a importância do período de latência na calibração de modelos para doenças específicas.
+
+Trabalhos futuros podem incorporar vacinação como compartimento adicional, modelar populações estruturadas por grupos de risco, incluir estocasticidade para populações pequenas, e estimar parâmetros a partir de dados reais via ajuste de curvas. O código encontra-se disponível em formato aberto, com documentação interna detalhada, para uso educacional e de pesquisa.
+
+Referências
+
+[1] Kermack, W. O., & McKendrick, A. G. (1927). A contribution to the mathematical theory of epidemics. Proceedings of the Royal Society of London. Series A, 115(772), 700–721.
+
+[2] Anderson, R. M., & May, R. M. (1991). Infectious Diseases of Humans: Dynamics and Control. Oxford University Press.
+
+[3] Virtanen, P., et al. (2020). SciPy 1.0: Fundamental Algorithms for Scientific Computing in Python. Nature Methods, 17, 261–272.
+
+[4] Hethcote, H. W. (2000). The mathematics of infectious diseases. SIAM Review, 42(4), 599–653.
+
+[5] Diekmann, O., & Heesterbeek, J. A. P. (2000). Mathematical Epidemiology of Infectious Diseases: Model Building, Analysis and Interpretation. Wiley.
+
+[6] Keeling, M. J., & Rohani, P. (2008). Modeling Infectious Diseases in Humans and Animals. Princeton University Press.
+
+[7] Brauer, F., Castillo-Chavez, C., & Feng, Z. (2019). Mathematical Models in Epidemiology. Springer.
+
+[8] Hunter, J. D. (2007). Matplotlib: A 2D Graphics Environment. Computing in Science & Engineering, 9(3), 90–95.
+
+Página  de
