@@ -124,8 +124,6 @@
 > Depois de gerar os arquivos, explique brevemente:
 >
 > 1. Como cada arquivo funciona.
-> 2. Como publicar o projeto no GitHub.
-> 3. Como ativar o GitHub Pages.
 > 4. Quais partes do código são mais complexas para um aluno iniciante compreender.
 >
 > Não entregue apenas trechos soltos. Entregue o projeto completo, com todos os arquivos separados e identificados.
