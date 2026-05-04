@@ -1,1 +1,1 @@
-# Simulador-epidemiol-gico
+# Simulador-epidemiologico
