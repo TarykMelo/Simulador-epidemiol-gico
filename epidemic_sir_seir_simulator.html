@@ -1,0 +1,277 @@
+
+<h2 class="sr-only">Interactive SIR/SEIR epidemic simulator with adjustable parameters and real-time charts</h2>
+
+<style>
+  :root { --gap: 12px; }
+  .sim-grid { display: grid; grid-template-columns: 280px minmax(0,1fr); gap: 20px; padding: 1rem 0; }
+  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .panel-title { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 1rem; }
+  .param-row { margin-bottom: 14px; }
+  .param-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .param-val { font-weight: 500; color: var(--color-text-primary); min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; }
+  .model-toggle { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+  .model-btn { flex: 1; padding: 6px; font-size: 12px; font-weight: 500; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
+  .model-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: transparent; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+  .stat-label { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 2px; }
+  .stat-val { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin: 0; font-variant-numeric: tabular-nums; }
+  .stat-val.red { color: #E24B4A; }
+  .stat-val.green { color: #3B6D11; }
+  .stat-val.amber { color: #BA7517; }
+  .stat-val.blue { color: #185FA5; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 12px; color: var(--color-text-secondary); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 3px; border-radius: 2px; }
+  .run-btn { width: 100%; padding: 8px; font-size: 13px; font-weight: 500; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; margin-top: 6px; }
+  .run-btn:hover { background: var(--color-background-secondary); }
+  .r0-badge { display: inline-block; padding: 3px 10px; border-radius: var(--border-radius-md); font-size: 12px; font-weight: 500; }
+  .section-sep { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 12px 0; }
+  .compare-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .compare-bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .compare-bar { height: 6px; border-radius: 3px; transition: width .4s ease; }
+  @media (max-width: 600px) { .sim-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="sim-grid">
+  <div>
+    <div class="panel" style="margin-bottom: 12px;">
+      <p class="panel-title">Model</p>
+      <div class="model-toggle">
+        <button class="model-btn active" id="btn-sir" onclick="setModel('SIR')">SIR</button>
+        <button class="model-btn" id="btn-seir" onclick="setModel('SEIR')">SEIR</button>
+      </div>
+      <p class="panel-title">Parameters</p>
+      <div class="param-row">
+        <div class="param-label"><span>Population (N)</span><span class="param-val" id="v-N">100,000</span></div>
+        <input type="range" id="r-N" min="1000" max="1000000" step="1000" value="100000" oninput="updateParam('N',this.value)">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span>Infection rate (β)</span><span class="param-val" id="v-beta">0.30</span></div>
+        <input type="range" id="r-beta" min="0.01" max="1.0" step="0.01" value="0.30" oninput="updateParam('beta',this.value)">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span>Recovery rate (γ)</span><span class="param-val" id="v-gamma">0.10</span></div>
+        <input type="range" id="r-gamma" min="0.01" max="0.5" step="0.01" value="0.10" oninput="updateParam('gamma',this.value)">
+      </div>
+      <div class="param-row" id="sigma-row" style="display:none">
+        <div class="param-label"><span>Incubation rate (σ)</span><span class="param-val" id="v-sigma">0.20</span></div>
+        <input type="range" id="r-sigma" min="0.01" max="0.5" step="0.01" value="0.20" oninput="updateParam('sigma',this.value)">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span>Days</span><span class="param-val" id="v-days">180</span></div>
+        <input type="range" id="r-days" min="30" max="730" step="10" value="180" oninput="updateParam('days',this.value)">
+      </div>
+      <div class="param-row">
+        <div class="param-label"><span>Initial infected</span><span class="param-val" id="v-I0">10</span></div>
+        <input type="range" id="r-I0" min="1" max="1000" step="1" value="10" oninput="updateParam('I0',this.value)">
+      </div>
+      <button class="run-btn" onclick="simulate()">Run simulation ↗</button>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Summary</p>
+      <div class="stats-grid">
+        <div class="stat-card"><p class="stat-label">Peak infected</p><p class="stat-val red" id="s-peak">—</p></div>
+        <div class="stat-card"><p class="stat-label">Peak day</p><p class="stat-val amber" id="s-peakday">—</p></div>
+        <div class="stat-card"><p class="stat-label">Total recovered</p><p class="stat-val green" id="s-recovered">—</p></div>
+        <div class="stat-card"><p class="stat-label">R₀</p><p class="stat-val blue" id="s-r0">—</p></div>
+      </div>
+      <div style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.5;">
+        <strong style="color: var(--color-text-primary);">R₀ = β/γ</strong> — average people infected by one case. R₀ &gt; 1 means epidemic grows; R₀ &lt; 1 means it fades.
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel" style="margin-bottom: 12px;">
+      <p class="panel-title">Epidemic curve</p>
+      <div class="legend" id="chart-legend">
+        <span><span class="legend-dot" style="background:#3266ad"></span>Susceptible</span>
+        <span><span class="legend-dot" style="background:#E24B4A"></span>Infected</span>
+        <span><span class="legend-dot" style="background:#3B6D11"></span>Recovered</span>
+      </div>
+      <div style="position:relative; height: 260px;">
+        <canvas id="mainChart" role="img" aria-label="Epidemic curve showing susceptible, infected, and recovered populations over time"></canvas>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom: 12px;">
+      <p class="panel-title">Daily new infections</p>
+      <div style="position:relative; height: 150px;">
+        <canvas id="deltaChart" role="img" aria-label="Daily new infections over time"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="panel-title">Population breakdown over time</p>
+      <div style="position:relative; height: 120px;">
+        <canvas id="stackedChart" role="img" aria-label="Stacked area chart of population compartments over time"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let params = { N: 100000, beta: 0.30, gamma: 0.10, sigma: 0.20, days: 180, I0: 10 };
+let model = 'SIR';
+let mainChart, deltaChart, stackedChart;
+
+function setModel(m) {
+  model = m;
+  document.getElementById('btn-sir').classList.toggle('active', m==='SIR');
+  document.getElementById('btn-seir').classList.toggle('active', m==='SEIR');
+  document.getElementById('sigma-row').style.display = m==='SEIR' ? 'block' : 'none';
+  const leg = document.getElementById('chart-legend');
+  leg.innerHTML = m==='SEIR'
+    ? `<span><span class="legend-dot" style="background:#3266ad"></span>Susceptible</span>
+       <span><span class="legend-dot" style="background:#BA7517"></span>Exposed</span>
+       <span><span class="legend-dot" style="background:#E24B4A"></span>Infected</span>
+       <span><span class="legend-dot" style="background:#3B6D11"></span>Recovered</span>`
+    : `<span><span class="legend-dot" style="background:#3266ad"></span>Susceptible</span>
+       <span><span class="legend-dot" style="background:#E24B4A"></span>Infected</span>
+       <span><span class="legend-dot" style="background:#3B6D11"></span>Recovered</span>`;
+  simulate();
+}
+
+function updateParam(key, val) {
+  params[key] = parseFloat(val);
+  const fmt = key==='N' ? Math.round(params.N).toLocaleString()
+    : key==='I0' ? Math.round(params.I0)
+    : key==='days' ? Math.round(params.days)
+    : params[key].toFixed(2);
+  document.getElementById('v-'+key).textContent = fmt;
+  simulate();
+}
+
+function runSIR() {
+  const { N, beta, gamma, days, I0 } = params;
+  let S = N - I0, I = I0, R = 0;
+  const ts = [0], Ss = [S], Is = [I], Rs = [R], deltas = [I0];
+  const dt = 1;
+  for (let t = 1; t <= days; t++) {
+    const dS = -beta * S * I / N;
+    const dI = beta * S * I / N - gamma * I;
+    const dR = gamma * I;
+    S += dS * dt; I += dI * dt; R += dR * dt;
+    S = Math.max(0, S); I = Math.max(0, I); R = Math.max(0, R);
+    ts.push(t); Ss.push(S); Is.push(I); Rs.push(R);
+    deltas.push(Math.max(0, beta * Ss[t-1] * Is[t-1] / N));
+  }
+  return { ts, Ss, Is, Rs, Es: null, deltas };
+}
+
+function runSEIR() {
+  const { N, beta, gamma, sigma, days, I0 } = params;
+  let S = N - I0, E = 0, I = I0, R = 0;
+  const ts = [0], Ss = [S], Es = [E], Is = [I], Rs = [R], deltas = [I0];
+  const dt = 1;
+  for (let t = 1; t <= days; t++) {
+    const dS = -beta * S * I / N;
+    const dE = beta * S * I / N - sigma * E;
+    const dI = sigma * E - gamma * I;
+    const dR = gamma * I;
+    S += dS * dt; E += dE * dt; I += dI * dt; R += dR * dt;
+    S = Math.max(0, S); E = Math.max(0, E); I = Math.max(0, I); R = Math.max(0, R);
+    ts.push(t); Ss.push(S); Es.push(E); Is.push(I); Rs.push(R);
+    deltas.push(Math.max(0, beta * Ss[t-1] * Is[t-1] / N));
+  }
+  return { ts, Ss, Is, Rs, Es, deltas };
+}
+
+function simulate() {
+  const res = model === 'SIR' ? runSIR() : runSEIR();
+  const { ts, Ss, Is, Rs, Es, deltas } = res;
+  const N = params.N;
+
+  const peakI = Math.max(...Is);
+  const peakDay = Is.indexOf(peakI);
+  const totalR = Math.round(Rs[Rs.length-1]);
+  const r0 = (params.beta / params.gamma).toFixed(2);
+
+  document.getElementById('s-peak').textContent = Math.round(peakI).toLocaleString();
+  document.getElementById('s-peakday').textContent = peakDay;
+  document.getElementById('s-recovered').textContent = totalR.toLocaleString();
+  document.getElementById('s-r0').textContent = r0;
+
+  const labels = ts;
+  const pct = v => Math.round(v / N * 1000) / 10;
+
+  const mainDatasets = model === 'SEIR'
+    ? [
+        { label:'Susceptible', data: Ss.map(pct), borderColor:'#3266ad', backgroundColor:'rgba(50,102,173,0.07)', borderWidth:2, pointRadius:0, fill:false, tension:0.3 },
+        { label:'Exposed',     data: Es.map(pct), borderColor:'#BA7517', backgroundColor:'rgba(186,117,23,0.07)',  borderWidth:2, pointRadius:0, fill:false, tension:0.3, borderDash:[4,3] },
+        { label:'Infected',    data: Is.map(pct), borderColor:'#E24B4A', backgroundColor:'rgba(226,75,74,0.1)',   borderWidth:2.5, pointRadius:0, fill:false, tension:0.3 },
+        { label:'Recovered',   data: Rs.map(pct), borderColor:'#3B6D11', backgroundColor:'rgba(59,109,17,0.07)', borderWidth:2, pointRadius:0, fill:false, tension:0.3 },
+      ]
+    : [
+        { label:'Susceptible', data: Ss.map(pct), borderColor:'#3266ad', backgroundColor:'rgba(50,102,173,0.07)', borderWidth:2, pointRadius:0, fill:false, tension:0.3 },
+        { label:'Infected',    data: Is.map(pct), borderColor:'#E24B4A', backgroundColor:'rgba(226,75,74,0.1)',   borderWidth:2.5, pointRadius:0, fill:false, tension:0.3 },
+        { label:'Recovered',   data: Rs.map(pct), borderColor:'#3B6D11', backgroundColor:'rgba(59,109,17,0.07)', borderWidth:2, pointRadius:0, fill:false, tension:0.3 },
+      ];
+
+  const cfg = {
+    type:'line',
+    data:{ labels, datasets: mainDatasets },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{ duration:400 },
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{display:false}, tooltip:{
+        callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` }
+      }},
+      scales:{
+        x:{ ticks:{ maxTicksLimit:10, font:{size:11}, color:'#888' }, grid:{ color:'rgba(128,128,128,0.08)' }, title:{ display:true, text:'Days', font:{size:11}, color:'#888' } },
+        y:{ ticks:{ callback: v => v+'%', font:{size:11}, color:'#888' }, grid:{ color:'rgba(128,128,128,0.08)' }, title:{ display:true, text:'% of population', font:{size:11}, color:'#888' }, min:0, max:100 }
+      }
+    }
+  };
+
+  if (mainChart) { mainChart.data = cfg.data; mainChart.options = cfg.options; mainChart.update(); }
+  else { mainChart = new Chart(document.getElementById('mainChart'), cfg); }
+
+  const deltaCfg = {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Daily new infections', data: deltas.map(v => Math.round(v)), backgroundColor:'rgba(226,75,74,0.5)', borderColor:'#E24B4A', borderWidth:0 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:400},
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y.toLocaleString()} new cases` }} },
+      scales:{
+        x:{ ticks:{maxTicksLimit:8, font:{size:10}, color:'#888'}, grid:{display:false} },
+        y:{ ticks:{ callback: v => v>=1000 ? (v/1000).toFixed(0)+'k' : v, font:{size:10}, color:'#888' }, grid:{ color:'rgba(128,128,128,0.08)' } }
+      }
+    }
+  };
+  if (deltaChart) { deltaChart.data = deltaCfg.data; deltaChart.options = deltaCfg.options; deltaChart.update(); }
+  else { deltaChart = new Chart(document.getElementById('deltaChart'), deltaCfg); }
+
+  const stackDs = model === 'SEIR'
+    ? [
+        { label:'Susceptible', data: Ss.map(pct), backgroundColor:'rgba(50,102,173,0.5)', borderColor:'#3266ad', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+        { label:'Exposed',     data: Es.map(pct), backgroundColor:'rgba(186,117,23,0.6)', borderColor:'#BA7517', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+        { label:'Infected',    data: Is.map(pct), backgroundColor:'rgba(226,75,74,0.6)',  borderColor:'#E24B4A', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+        { label:'Recovered',   data: Rs.map(pct), backgroundColor:'rgba(59,109,17,0.5)',  borderColor:'#3B6D11', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+      ]
+    : [
+        { label:'Susceptible', data: Ss.map(pct), backgroundColor:'rgba(50,102,173,0.5)', borderColor:'#3266ad', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+        { label:'Infected',    data: Is.map(pct), backgroundColor:'rgba(226,75,74,0.6)',  borderColor:'#E24B4A', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+        { label:'Recovered',   data: Rs.map(pct), backgroundColor:'rgba(59,109,17,0.5)',  borderColor:'#3B6D11', borderWidth:0.5, fill:true, pointRadius:0, tension:0.3 },
+      ];
+
+  const stackCfg = {
+    type:'line',
+    data:{ labels, datasets: stackDs },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:400},
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ stacked:true, ticks:{maxTicksLimit:8, font:{size:10}, color:'#888'}, grid:{display:false} },
+        y:{ stacked:true, ticks:{ callback: v=>v+'%', font:{size:10}, color:'#888' }, grid:{ color:'rgba(128,128,128,0.08)' }, min:0, max:100 }
+      }
+    }
+  };
+  if (stackedChart) { stackedChart.data = stackCfg.data; stackedChart.options = stackCfg.options; stackedChart.update(); }
+  else { stackedChart = new Chart(document.getElementById('stackedChart'), stackCfg); }
+}
+
+simulate();
+</script>
