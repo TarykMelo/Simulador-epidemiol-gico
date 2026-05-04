@@ -12,7 +12,6 @@
 - [Como Funciona o Modelo SIR/SEIR](#como-funciona-o-modelo-sirseir)
 - [Tecnologias Usadas](#tecnologias-usadas)
 - [Como Executar Localmente](#como-executar-localmente)
-- [Como Hospedar no GitHub Pages](#como-hospedar-no-github-pages)
 - [Limitações do Modelo](#limitações-do-modelo)
 - [⚠️ Aviso Importante](#️-aviso-importante)
 - [Gerado com Auxílio de IA](#gerado-com-auxílio-de-ia)
