@@ -245,9 +245,9 @@ Este projeto foi desenvolvido com o suporte de ferramentas de Inteligência Arti
 
 | Campo | Informação |
 |---|---|
-| **IA utilizada** | *(preencher — ex: Claude, ChatGPT, Gemini...)* |
+| **IA utilizada** | *(Claude Sonnet 4.6)* |
 | **Prompt utilizado** | Ver arquivo [`prompts/prompt-codigo.md`](prompts/prompt-codigo.md) |
-| **Data de geração** | *(preencher — ex: 04/05/2026)* |
+| **Data de geração** | *(04/05/2026)* |
 | **Nome do estudante** | Taryk de Melo Barbosa Alves |
 
 ---
